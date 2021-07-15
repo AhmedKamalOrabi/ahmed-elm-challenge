@@ -1,0 +1,59 @@
+html,
+body {
+  margin: 0;
+  height: 100%;
+}
+
+.app-container {
+  background-image: linear-gradient(123deg, #00d0be, #8f5be1);
+  height: auto;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.form-container {
+  background: #ffffff;
+  padding: 26px;
+  padding-top: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.logo-container {
+  display: flex;
+  padding: 26px 0 10px;
+}
+
+.logo-container svg {
+  font-size: 30px;
+  color: #4cb6a5;
+}
+
+.radio-buttons-group {
+  display: flex;
+}
+
+.submit-button-container {
+  display: flex;
+}
+
+.submit-button {
+  border-radius: 4px;
+  background-color: #0099ff;
+  color: #ffffff;
+  padding: 14px 36px;
+}
+
+.submit-button:hover {
+  background-color: #0086df;
+}
+
+.submit-button:focus,
+.submit-button:active {
+  outline: none;
+}

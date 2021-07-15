@@ -1,0 +1,14 @@
+{
+  "name": "elm-challenge",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "Shore GmbH",
+  "license": "MIT",
+  "scripts": {
+    "dev": "elm-live src/Main.elm -s index.html -p 1234 -- --debug --output=./elm.js"
+  },
+  "devDependencies": {
+    "elm": "0.19.1-5",
+    "elm-live": "4.0.2"
+  }
+}
