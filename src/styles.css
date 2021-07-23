@@ -57,3 +57,18 @@ body {
 .submit-button:active {
   outline: none;
 }
+
+.error {
+  color: red;
+}
+.none {
+  display: none;
+}
+
+.inputError {
+  border: 1px solid red;
+}
+
+.inputError + label {
+  color: red;
+}

@@ -5,10 +5,12 @@
   "author": "Shore GmbH",
   "license": "MIT",
   "scripts": {
-    "dev": "elm-live src/Main.elm -s index.html -p 1234 -- --debug --output=./elm.js"
+    "start": "elm-live src/Main.elm -s index.html -p 1234 -- --debug --output=./elm.js",
+    "format": "elm-format src/ --yes"
   },
   "devDependencies": {
     "elm": "0.19.1-5",
+    "elm-format": "^0.8.5",
     "elm-live": "4.0.2"
   }
 }

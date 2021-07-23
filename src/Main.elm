@@ -1,6 +1,7 @@
 module Main exposing (main)
 
 import Browser
+import Debug exposing (log)
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Events as Events
@@ -14,23 +15,25 @@ type alias Model =
 type Msg
     = UpdateFormField Field
     | SubmitForm
+    | HandleReset
 
 
 type alias FormData =
     { firstName : Field
     , lastName : Field
     , gender : Field
+    , formIsValid : Bool
+    , formIsSubmitted : Bool
+    , isFirstNameValid : Bool
+    , isLastNameValid : Bool
+    , isGenderValid : Bool
     }
 
 
-type alias FieldError =
-    Maybe String
-
-
 type Field
-    = FirstName FieldError String
-    | LastName FieldError String
-    | Gender FieldError String
+    = FirstName String String
+    | LastName String String
+    | Gender String String
 
 
 main : Program () Model Msg
@@ -45,9 +48,14 @@ main =
 
 initialFormData : FormData
 initialFormData =
-    { firstName = FirstName Nothing ""
-    , lastName = LastName Nothing ""
-    , gender = Gender Nothing ""
+    { firstName = FirstName "" ""
+    , lastName = LastName "" ""
+    , gender = Gender "" ""
+    , formIsValid = False
+    , formIsSubmitted = False
+    , isFirstNameValid = False
+    , isLastNameValid = False
+    , isGenderValid = False
     }
 
 
@@ -63,7 +71,29 @@ update msg model =
             ( updateFormField field model, Cmd.none )
 
         SubmitForm ->
-            ( model, Cmd.none )
+            ( submitForm model, Cmd.none )
+
+        HandleReset ->
+            ( handleReset model, Cmd.none )
+
+
+submitForm : Model -> Model
+submitForm model =
+    let
+        isFirstNameValid =
+            String.isEmpty (getFieldValue model.firstName) == False
+
+        isLastNameValid =
+            String.isEmpty (getFieldValue model.lastName) == False
+
+        isGenderValid =
+            String.isEmpty (getFieldValue model.gender) == False
+    in
+    if isFirstNameValid && isLastNameValid && isGenderValid then
+        { model | formIsValid = True, formIsSubmitted = True, isFirstNameValid = isFirstNameValid, isLastNameValid = isLastNameValid, isGenderValid = isGenderValid }
+
+    else
+        { model | formIsValid = False, formIsSubmitted = True, isFirstNameValid = isFirstNameValid, isLastNameValid = isLastNameValid, isGenderValid = isGenderValid }
 
 
 
@@ -71,12 +101,23 @@ update msg model =
 
 
 updateFormField : Field -> Model -> Model
-updateFormField _ data =
+updateFormField field model =
     let
-        _ =
-            Debug.log "Implement `updateFormField` to actually update the model" ()
+        newValue =
+            getFieldValue field
+
+        isValidValue =
+            String.isEmpty newValue == False
     in
-    data
+    case field of
+        FirstName _ _ ->
+            { model | firstName = FirstName "" newValue, isFirstNameValid = isValidValue }
+
+        LastName _ _ ->
+            { model | lastName = LastName "" newValue, isLastNameValid = isValidValue }
+
+        Gender _ _ ->
+            { model | gender = Gender "" newValue, isGenderValid = isValidValue }
 
 
 getFieldValue : Field -> String
@@ -92,36 +133,76 @@ getFieldValue field =
             val
 
 
+handleReset : Model -> Model
+handleReset model =
+    { model
+        | firstName = FirstName "" ""
+        , lastName = LastName "" ""
+        , gender = Gender "" ""
+        , formIsValid = False
+        , formIsSubmitted = False
+        , isFirstNameValid = False
+        , isLastNameValid = False
+        , isGenderValid = False
+    }
+
+
 view : Model -> Html Msg
 view model =
-    Html.div [ Attr.class "form-container" ]
-        [ Html.header [ Attr.class "logo-container" ] [ Images.shoreLogo ]
-        , Html.form [ Events.onSubmit SubmitForm ]
-            [ inputWrapper
-                []
-                [ renderFormInput "First name" <|
-                    Html.input
-                        [ Attr.type_ "text"
-                        , Events.onInput (UpdateFormField << FirstName Nothing)
-                        , Attr.value <| getFieldValue model.firstName
-                        ]
-                        []
-                , renderFormInput "Last name" <|
-                    Html.input
-                        [ Attr.type_ "text"
-                        , Events.onInput (UpdateFormField << LastName Nothing)
-                        , Attr.value <| getFieldValue model.lastName
-                        ]
-                        []
-                , renderFormRadioGroup "Gender"
-                    [ ( "Male", "male" ), ( "Female", "female" ) ]
-                    (getFieldValue model.gender)
-                    (UpdateFormField << Gender Nothing)
+    Html.div []
+        [ Html.div (showFormValues model)
+            [ Html.h2 [] [ Html.text "Form Values" ]
+            , Html.ul []
+                [ Html.li []
+                    [ Html.strong [] [ Html.text "First name: " ]
+                    , Html.span [] [ Html.text (getFieldValue model.firstName) ]
+                    ]
+                , Html.li []
+                    [ Html.strong [] [ Html.text "Last name: " ]
+                    , Html.span [] [ Html.text (getFieldValue model.lastName) ]
+                    ]
+                , Html.li []
+                    [ Html.strong [] [ Html.text "Gender: " ]
+                    , Html.span [] [ Html.text (getFieldValue model.gender) ]
+                    ]
                 ]
+            , Html.button [ Events.onClick HandleReset ] [ Html.text "Reset" ]
             ]
-        , Html.div [ Attr.class "submit-button-container" ]
-            [ Html.button [ Attr.class "submit-button" ]
-                [ Html.text "Submit"
+        , Html.div [ Attr.class "form-container" ]
+            [ Html.span (showIsFormValidOrNot model) [ Html.text "Form is invalid" ]
+            , Html.header [ Attr.class "logo-container" ] [ Images.shoreLogo ]
+            , Html.form [ Events.onSubmit SubmitForm ]
+                [ inputWrapper
+                    []
+                    [ renderFormInput "First name" <|
+                        Html.input
+                            ([ Attr.type_ "text"
+                             , Attr.autofocus True
+                             , Events.onInput (UpdateFormField << FirstName "")
+                             , Attr.value <| getFieldValue model.firstName
+                             ]
+                                ++ getFirstNameClass model
+                            )
+                            []
+                    , renderFormInput "Last name" <|
+                        Html.input
+                            ([ Attr.type_ "text"
+                             , Events.onInput (UpdateFormField << LastName "")
+                             , Attr.value <| getFieldValue model.lastName
+                             ]
+                                ++ getLastNameClass model
+                            )
+                            []
+                    , renderFormRadioGroup "Gender"
+                        [ ( "Male", "male" ), ( "Female", "female" ) ]
+                        (getFieldValue model.gender)
+                        (UpdateFormField << Gender "")
+                    ]
+                , Html.div [ Attr.class "submit-button-container" ]
+                    [ Html.button [ Attr.class "submit-button", Attr.type_ "submit" ]
+                        [ Html.text "Submit"
+                        ]
+                    ]
                 ]
             ]
         ]
@@ -141,6 +222,46 @@ renderFormInput fieldLabel field =
             , Html.label [] [ Html.text fieldLabel ]
             ]
         ]
+
+
+showFormValues model =
+    if model.formIsSubmitted == True && model.formIsValid == True then
+        []
+
+    else
+        [ Attr.class "none" ]
+
+
+getFirstNameClass model =
+    if model.formIsSubmitted && model.isFirstNameValid == False then
+        [ Attr.class "inputError" ]
+
+    else
+        []
+
+
+getLastNameClass model =
+    if model.formIsSubmitted && model.isLastNameValid == False then
+        [ Attr.class "inputError" ]
+
+    else
+        []
+
+
+getGenderClass model =
+    if model.formIsSubmitted && model.isGenderValid == False then
+        [ Attr.class "inputError" ]
+
+    else
+        []
+
+
+showIsFormValidOrNot model =
+    if model.formIsSubmitted && model.formIsValid == False then
+        [ Attr.class "error" ]
+
+    else
+        [ Attr.class "none" ]
 
 
 
